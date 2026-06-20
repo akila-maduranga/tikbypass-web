@@ -114,18 +114,8 @@ dom.processBtn.addEventListener('click', async () => {
         clearInterval(progressInterval);
 
         if (!resp.ok) {
-<<<<<<< HEAD
-            let errMsg = `Server error: ${resp.status}`;
-            try {
-                const err = await resp.json();
-                errMsg = err.error || err.detail || errMsg;
-                if (err.detail) console.error(err.detail);
-            } catch {}
-            throw new Error(errMsg);
-=======
             const err = await resp.json();
             throw new Error(err.error || `Server error: ${resp.status}`);
->>>>>>> 33ba14e362c81053444b55bdc714012bad0d2a83
         }
 
         const data = await resp.json();

@@ -7,6 +7,7 @@ import os
 import shutil
 import subprocess
 import sys
+import traceback
 import uuid
 from pathlib import Path
 from datetime import datetime
@@ -135,7 +136,6 @@ async def upload(
             contents = await file.read()
             if len(contents) > MAX_SIZE_MB * 1024 * 1024:
                 return JSONResponse({"error": f"File exceeds {MAX_SIZE_MB}MB limit"}, status_code=413)
-
             input_path.write_bytes(contents)
         except Exception as e:
             return JSONResponse({"error": f"Failed to save upload: {e}"}, status_code=500)
@@ -153,7 +153,7 @@ async def upload(
             "no_inflate": no_inflate,
         }
 
-        success, log = run_bypass(input_path, output_path)
+        success, log = run_bypass(input_path, output_path, options)
 
         if not success:
             # Clean up on failure
@@ -172,8 +172,8 @@ async def upload(
             "size_mb": round(size_mb, 1),
             "log": log[-2000:],
         })
+
     except Exception as e:
-        import traceback
         return JSONResponse({
             "error": f"Internal error: {e}",
             "detail": traceback.format_exc()[-2000:],

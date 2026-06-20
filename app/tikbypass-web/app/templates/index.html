@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikBypass — Defy Compression</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧬</text></svg>">
+</head>
+<body>
+    <div class="app">
+        <!-- Header -->
+        <header>
+            <h1><span class="emoji">🧬</span> TikBypass</h1>
+            <p class="tagline">Upload. Process. Bypass TikTok compression.</p>
+        </header>
+
+        <!-- Upload Zone -->
+        <section class="upload-zone" id="uploadZone">
+            <input type="file" id="fileInput" accept="video/*" hidden>
+            <div class="drop-target" id="dropTarget">
+                <div class="drop-icon">📤</div>
+                <p><strong>Drop video here</strong> or click to browse</p>
+                <p class="hint">MP4, MOV, AVI, MKV, WEBM — up to 500 MB</p>
+                <p class="file-name" id="fileName"></p>
+            </div>
+        </section>
+
+        <!-- Options Panel -->
+        <section class="options" id="optionsPanel">
+            <details>
+                <summary>⚙️ Advanced Options</summary>
+                <div class="options-grid">
+                    <label>CRF (quality)
+                        <input type="number" id="optCrf" value="18" min="1" max="51">
+                        <small>Lower = better quality (17-20 recommended)</small>
+                    </label>
+                    <label>Preset
+                        <select id="optPreset">
+                            <option value="medium" selected>medium</option>
+                            <option value="fast">fast</option>
+                            <option value="slow">slow</option>
+                            <option value="veryslow">veryslow</option>
+                        </select>
+                    </label>
+                    <label>FPS
+                        <input type="number" id="optFps" value="30" min="1" max="120">
+                    </label>
+                    <label>Resolution
+                        <input type="text" id="optRes" value="1080x1920" placeholder="WIDTHxHEIGHT">
+                    </label>
+                    <label>Max Bitrate
+                        <select id="optMaxrate">
+                            <option value="6M">6 Mbps</option>
+                            <option value="8M" selected>8 Mbps</option>
+                            <option value="12M">12 Mbps</option>
+                            <option value="20M">20 Mbps</option>
+                        </select>
+                    </label>
+                    <label>Audio Bitrate
+                        <select id="optAudio">
+                            <option value="128k">128 kbps</option>
+                            <option value="192k" selected>192 kbps</option>
+                            <option value="256k">256 kbps</option>
+                        </select>
+                    </label>
+                    <label>Device ID
+                        <select id="optDevice">
+                            <option value="iPhone15,2" selected>iPhone 14 Pro</option>
+                            <option value="iPhone15,3">iPhone 14 Pro Max</option>
+                            <option value="iPhone16,1">iPhone 15 Pro</option>
+                            <option value="iPhone16,2">iPhone 15 Pro Max</option>
+                            <option value="iPhone14,3">iPhone 13 Pro Max</option>
+                        </select>
+                    </label>
+                    <label>iOS Version
+                        <input type="text" id="optIos" value="16.4">
+                    </label>
+                    <label>Inflation Loops
+                        <input type="number" id="optLoops" value="5" min="1" max="20">
+                    </label>
+                </div>
+                <div class="strategy-toggles">
+                    <label class="toggle"><input type="checkbox" id="optSharpen" checked> Sharpen</label>
+                    <label class="toggle"><input type="checkbox" id="optGrain" checked> Grain</label>
+                    <label class="toggle"><input type="checkbox" id="optFaststart" checked> Faststart</label>
+                    <label class="toggle"><input type="checkbox" id="optSpoof" checked> Device Spoof</label>
+                    <label class="toggle"><input type="checkbox" id="optInflate" checked> Table Inflate</label>
+                </div>
+            </details>
+        </section>
+
+        <!-- Process Button -->
+        <div class="actions">
+            <button id="processBtn" disabled>Process Video</button>
+        </div>
+
+        <!-- Status -->
+        <section class="status hidden" id="statusPanel">
+            <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+            <p class="status-text" id="statusText"></p>
+            <pre class="log hidden" id="logOutput"></pre>
+        </section>
+
+        <!-- Result -->
+        <section class="result hidden" id="resultPanel">
+            <div class="result-card">
+                <div class="check">✅</div>
+                <h2>Done!</h2>
+                <p id="resultInfo"></p>
+                <a class="download-btn" id="downloadLink" href="#">⬇ Download Processed Video</a>
+                <button class="reset-btn" id="resetBtn">Process Another</button>
+            </div>
+        </section>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

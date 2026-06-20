@@ -39,8 +39,8 @@ class Config:
     grain: bool = True
     faststart: bool = True
     spoof_device: bool = True
-    inflate_stbl: bool = False          # aggressive — off by default
-    inflate_loops: int = 3
+    inflate_stbl: bool = True           # 5x inflation by default
+    inflate_loops: int = 5
     device_model: str = "iPhone15,2"    # iPhone 14 Pro
     ios_version: str = "16.4"
     crf: int = 18                       # lower = better quality (17-20 sweet spot)
@@ -665,8 +665,8 @@ def main():
 Examples:
   %(prog)s input.mp4 -o output.mp4
   %(prog)s input.mp4 -o output.mp4 --crf 16 --device "iPhone15,3"
-  %(prog)s input.mp4 -o output.mp4 --inflate --inflate-loops 5
-  %(prog)s input.mp4 -o output.mp4 --no-grain --no-sharpen
+  %(prog)s input.mp4 -o output.mp4 --inflate-loops 7
+  %(prog)s input.mp4 -o output.mp4 --no-grain --no-sharpen --no-inflate
         """,
     )
 
@@ -699,10 +699,10 @@ Examples:
                        help="Disable faststart (moov repositioning)")
     strat.add_argument("--no-spoof", action="store_true",
                        help="Disable device metadata spoofing")
-    strat.add_argument("--inflate", action="store_true",
-                       help="Enable aggressive sample-table inflation (off by default)")
-    strat.add_argument("--inflate-loops", type=int, default=3,
-                       help="Inflation loop count [default: 3]")
+    strat.add_argument("--no-inflate", action="store_true",
+                       help="Disable sample-table inflation")
+    strat.add_argument("--inflate-loops", type=int, default=5,
+                       help="Inflation loop count [default: 5]")
 
     # Device
     dev = parser.add_argument_group("Device Spoofing")
@@ -723,7 +723,7 @@ Examples:
         grain=not args.no_grain,
         faststart=not args.no_faststart,
         spoof_device=not args.no_spoof,
-        inflate_stbl=args.inflate,
+        inflate_stbl=not args.no_inflate,
         inflate_loops=args.inflate_loops,
         device_model=args.device,
         ios_version=args.ios,

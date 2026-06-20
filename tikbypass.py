@@ -268,7 +268,7 @@ def adjust_offsets(data: bytearray, delta: int, start: int, end: int):
         if size < hdr_sz or pos + size > end:
             break
 
-        btype = data[pos + 4:pos + 8]
+        btype = bytes(data[pos + 4:pos + 8])
 
         if btype in CONTAINER_TYPES:
             adjust_offsets(data, delta, pos + hdr_sz, pos + size)
@@ -302,7 +302,7 @@ def apply_faststart(data: bytes, cfg: Config) -> bytes:
     moov_off, moov_sz = find_box(data, b"moov")
     mdat_off, mdat_sz = find_box(data, b"mdat")
 
-    if -1 in (ftyp_off, moov_off, mdat_sz):
+    if -1 in (ftyp_off, moov_off, mdat_off):
         cfg.log("[FASTSTART] Missing expected top-level boxes, skipping.")
         return data
 

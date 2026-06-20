@@ -11,10 +11,9 @@ import uuid
 from pathlib import Path
 from datetime import datetime
 
-from fastapi import FastAPI, File, UploadFile, Form, Request
+from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 
 # ── Config ────────────────────────────────────────────────────────
 UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", "/tmp/tikbypass/uploads"))
@@ -30,7 +29,7 @@ app = FastAPI(title="TikBypass", version="1.0.0")
 
 BASE_DIR = Path(__file__).resolve().parent
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
-templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+TEMPLATES_DIR = BASE_DIR / "templates"
 
 # Path to tikbypass tool (mounted in container)
 TIKBYPASS_SCRIPT = Path(os.getenv("TIKBYPASS_SCRIPT", "/app/tikbypass.py"))
@@ -90,8 +89,8 @@ def run_bypass(input_path: Path, output_path: Path, options: dict) -> tuple[bool
 # ── Routes ────────────────────────────────────────────────────────
 
 @app.get("/", response_class=HTMLResponse)
-async def index(request: Request):
-    return templates.TemplateResponse(request=request, name="index.html")
+async def index():
+    return HTMLResponse(content=(TEMPLATES_DIR / "index.html").read_text())
 
 
 @app.post("/api/upload")

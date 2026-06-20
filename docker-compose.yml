@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tikbypass
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      - UPLOAD_DIR=/tmp/tikbypass/uploads
+      - OUTPUT_DIR=/tmp/tikbypass/outputs
+      - MAX_UPLOAD_MB=500
+      - KEEP_FILES_MIN=30
+      - TIKBYPASS_SCRIPT=/app/tikbypass.py
+    volumes:
+      - tikbypass_data:/tmp/tikbypass
+    tmpfs:
+      - /tmp:exec,size=2G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  nginx:
+    image: nginx:alpine
+    container_name: tikbypass-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - tikbypass_data:/tmp/tikbypass:ro
+    depends_on:
+      - app
+
+volumes:
+  tikbypass_data:

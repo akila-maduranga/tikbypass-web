@@ -114,18 +114,18 @@ dom.processBtn.addEventListener('click', async () => {
         clearInterval(progressInterval);
 
         if (!resp.ok) {
-<<<<<<< HEAD
             let errMsg = `Server error: ${resp.status}`;
             try {
                 const err = await resp.json();
                 errMsg = err.error || err.detail || errMsg;
+                // Show processing log on failure
+                if (err.log) {
+                    dom.logOutput.textContent = err.log;
+                    dom.logOutput.classList.remove('hidden');
+                }
                 if (err.detail) console.error(err.detail);
             } catch {}
             throw new Error(errMsg);
-=======
-            const err = await resp.json();
-            throw new Error(err.error || `Server error: ${resp.status}`);
->>>>>>> 33ba14e362c81053444b55bdc714012bad0d2a83
         }
 
         const data = await resp.json();
@@ -148,15 +148,6 @@ dom.processBtn.addEventListener('click', async () => {
         dom.progressFill.style.background = 'var(--danger)';
         dom.statusText.textContent = `Error: ${err.message}`;
         dom.statusText.style.color = 'var(--danger)';
-
-        // Try to show server log
-        try {
-            const errData = JSON.parse(err.message);
-            if (errData.log) {
-                dom.logOutput.textContent = errData.log;
-                dom.logOutput.classList.remove('hidden');
-            }
-        } catch {}
     } finally {
         state.processing = false;
         dom.processBtn.disabled = false;

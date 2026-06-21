@@ -120,7 +120,6 @@ def encode_video(cfg: Config, tmp_path: Path) -> bool:
         "-b:a", cfg.audio_bitrate,
         "-ar", "48000",
         "-ac", "2",
-        "-movflags", "empty_moov",     # we handle moov ourselves
         str(tmp_path),
     ]
 

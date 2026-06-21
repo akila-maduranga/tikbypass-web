@@ -157,11 +157,14 @@ async def upload(
 
         if not success:
             # Clean up on failure
+            input_size_mb = round(input_path.stat().st_size / (1024*1024), 1) if input_path.exists() else 0
             input_path.unlink(missing_ok=True)
             output_path.unlink(missing_ok=True)
             return JSONResponse({
                 "error": "Processing failed",
-                "log": log[-2000:],
+                "log": log[-3000:],
+                "input_size_mb": input_size_mb,
+                "version": "816eb4d",
             }, status_code=500)
 
         size_mb = output_path.stat().st_size / (1024 * 1024)
@@ -198,11 +201,28 @@ async def health():
     ffmpeg_ok = shutil.which("ffmpeg") is not None
     ffprobe_ok = shutil.which("ffprobe") is not None
     script_ok = TIKBYPASS_SCRIPT.exists()
+    # Verify the bytearray fix is present
+    fix_ok = False
+    if script_ok:
+        src = TIKBYPASS_SCRIPT.read_text()
+        fix_ok = "bytes(data[pos + 4:pos + 8])" in src
+    # Check ffmpeg codec support
+    h264_ok = False
+    if ffmpeg_ok:
+        try:
+            r = subprocess.run(["ffmpeg", "-codecs"], capture_output=True, text=True, timeout=5)
+            h264_ok = "libx264" in r.stdout
+        except Exception:
+            pass
+    all_ok = ffmpeg_ok and ffprobe_ok and script_ok and fix_ok and h264_ok
     return {
-        "status": "ok" if (ffmpeg_ok and ffprobe_ok and script_ok) else "degraded",
+        "status": "ok" if all_ok else "degraded",
         "ffmpeg": ffmpeg_ok,
         "ffprobe": ffprobe_ok,
         "tikbypass_script": script_ok,
+        "bytearray_fix": fix_ok,
+        "libx264": h264_ok,
+        "version": "816eb4d",
     }
 
 

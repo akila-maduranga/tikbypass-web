@@ -15,59 +15,42 @@
   </header>
 
   <!-- Upload -->
-  <div class="card" id="uploadCard">
+  <div class="card">
     <div class="dropzone" id="dropzone">
-      <input type="file" id="fileInput" accept="video/mp4,video/quicktime,video/x-msvideo,video/x-matroska,video/webm,.mp4,.mov,.avi,.mkv,.webm" hidden>
-      <div class="dropzone-icon">📤</div>
-      <p class="dropzone-title">Drop video here or click to browse</p>
-      <p class="dropzone-hint">MP4, MOV, AVI, MKV, WEBM — up to 500 MB</p>
-      <p class="selected-file" id="selectedFile"></p>
+      <input type="file" id="fileInput" accept="video/*,.mp4,.mov,.avi,.mkv,.webm" hidden>
+      <div class="dz-icon">📤</div>
+      <p class="dz-title">Drop video here or click to browse</p>
+      <p class="dz-hint">MP4 · MOV · AVI · MKV · WEBM — up to 500 MB</p>
+      <p class="dz-file" id="selectedFile"></p>
     </div>
   </div>
 
   <!-- Options -->
-  <details class="options">
+  <details class="opts">
     <summary>⚙️ Advanced Options</summary>
-    <div class="options-grid">
-      <label>Quality (CRF) <input type="number" id="crf" value="18" min="1" max="51"><small>Lower = better, 17–20</small></label>
-      <label>Preset <select id="preset">
-        <option value="medium" selected>medium</option><option value="fast">fast</option>
-        <option value="slow">slow</option><option value="veryslow">veryslow</option>
-      </select></label>
-      <label>FPS <input type="number" id="fps" value="30" min="1" max="120"></label>
-      <label>Resolution <input type="text" id="resolution" value="1080x1920" placeholder="WIDTHxHEIGHT"></label>
-      <label>Max Bitrate <select id="maxrate">
-        <option value="6M">6 Mbps</option><option value="8M" selected>8 Mbps</option>
-        <option value="12M">12 Mbps</option><option value="20M">20 Mbps</option>
-      </select></label>
-      <label>Audio <select id="audioBitrate">
-        <option value="128k">128 kbps</option><option value="192k" selected>192 kbps</option>
-        <option value="256k">256 kbps</option>
-      </select></label>
-      <label>Device <select id="device">
-        <option value="iPhone15,2" selected>iPhone 14 Pro</option>
-        <option value="iPhone15,3">iPhone 14 Pro Max</option>
-        <option value="iPhone16,1">iPhone 15 Pro</option>
-        <option value="iPhone16,2">iPhone 15 Pro Max</option>
-        <option value="iPhone14,3">iPhone 13 Pro Max</option>
-      </select></label>
-      <label>iOS <input type="text" id="ios" value="16.4"></label>
-      <label>Inflate Loops <input type="number" id="inflateLoops" value="5" min="1" max="20"></label>
+    <div class="opts-grid">
+      <label>Quality (CRF)<input type="number" id="crf" value="18" min="1" max="51"><small>Lower = better, 17–20</small></label>
+      <label>Preset<select id="preset"><option value="medium" selected>medium</option><option value="fast">fast</option><option value="slow">slow</option><option value="veryslow">veryslow</option></select></label>
+      <label>FPS<input type="number" id="fps" value="30" min="1" max="120"></label>
+      <label>Resolution<input type="text" id="resolution" value="1080x1920"></label>
+      <label>Max Bitrate<select id="maxrate"><option value="6M">6 Mbps</option><option value="8M" selected>8 Mbps</option><option value="12M">12 Mbps</option><option value="20M">20 Mbps</option></select></label>
+      <label>Audio<select id="audioBitrate"><option value="128k">128 kbps</option><option value="192k" selected>192 kbps</option><option value="256k">256 kbps</option></select></label>
+      <label>Device<select id="device"><option value="iPhone15,2" selected>iPhone 14 Pro</option><option value="iPhone15,3">iPhone 14 Pro Max</option><option value="iPhone16,1">iPhone 15 Pro</option><option value="iPhone16,2">iPhone 15 Pro Max</option><option value="iPhone14,3">iPhone 13 Pro Max</option></select></label>
+      <label>iOS Version<input type="text" id="ios" value="16.4"></label>
     </div>
     <div class="toggles">
       <label class="toggle"><input type="checkbox" id="sharpen" checked> Sharpen</label>
       <label class="toggle"><input type="checkbox" id="grain" checked> Grain</label>
       <label class="toggle"><input type="checkbox" id="spoof" checked> Device Spoof</label>
-      <label class="toggle"><input type="checkbox" id="inflate"> Table Inflate <small>(may break playback)</small></label>
     </div>
   </details>
 
-  <!-- Process Button -->
-  <button class="btn-primary" id="processBtn" disabled>Process Video</button>
+  <!-- Process -->
+  <button class="btn btn-primary" id="processBtn" disabled>Process Video</button>
 
   <!-- Status -->
   <div class="card hidden" id="statusCard">
-    <div class="progress-bar"><div class="progress-fill" id="progressBar"></div></div>
+    <div class="progress"><div class="progress-fill" id="progressBar"></div></div>
     <p class="status-text" id="statusText"></p>
     <pre class="log hidden" id="logOutput"></pre>
   </div>
@@ -77,11 +60,19 @@
     <div class="result-icon">✅</div>
     <h2>Processing Complete</h2>
     <p id="resultInfo"></p>
-    <button class="btn-success" id="downloadBtn">⬇ Download Processed Video</button>
-    <button class="btn-reset" id="resetBtn">Process Another Video</button>
+    <a class="btn btn-success" id="downloadLink" href="#">⬇ Download Processed Video</a>
+    <button class="btn btn-ghost" id="resetBtn">Process Another Video</button>
+  </div>
+
+  <!-- Error -->
+  <div class="card hidden" id="errorCard">
+    <div class="result-icon">❌</div>
+    <h2>Processing Failed</h2>
+    <p id="errorInfo"></p>
+    <pre class="log" id="errorLog"></pre>
+    <button class="btn btn-ghost" id="errorResetBtn">Try Again</button>
   </div>
 </div>
-
 <script src="/static/js/app.js"></script>
 </body>
 </html>

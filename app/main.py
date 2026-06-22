@@ -80,6 +80,8 @@ def run_bypass(input_path: Path, output_path: Path, options: dict) -> tuple[bool
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
         log = result.stdout + "\n" + result.stderr
+        # Write log to disk for debugging
+        (OUTPUT_DIR / f"{output_path.stem}_log.txt").write_text(log)
         return result.returncode == 0, log
     except subprocess.TimeoutExpired:
         return False, "Processing timed out (10 min limit)"
@@ -222,8 +224,17 @@ async def health():
         "tikbypass_script": script_ok,
         "bytearray_fix": fix_ok,
         "libx264": h264_ok,
-        "version": "816eb4d",
+        "version": "09de570",
     }
+
+
+@app.get("/api/logs")
+async def list_logs():
+    """List recent processing logs for debugging."""
+    logs = []
+    for f in sorted(OUTPUT_DIR.glob("*_log.txt"), key=lambda x: x.stat().st_mtime, reverse=True):
+        logs.append({"file": f.name, "size": f.stat().st_size, "content": f.read_text()[-3000:]})
+    return {"count": len(logs), "logs": logs[:10]}
 
 
 if __name__ == "__main__":

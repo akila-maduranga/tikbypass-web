@@ -140,16 +140,24 @@ dom.processBtn.addEventListener('click', async () => {
         dom.statusPanel.classList.add('hidden');
         dom.resultPanel.classList.remove('hidden');
         dom.resultInfo.textContent = `${data.filename} — ${data.size_mb} MB`;
-        dom.downloadLink.href = `/api/download/${data.jobId}`;
-        dom.downloadLink.download = data.filename;
-        dom.downloadLink.onclick = (e) => {
+        dom.downloadLink.href = '#';
+        dom.downloadLink.onclick = async (e) => {
             e.preventDefault();
-            const a = document.createElement('a');
-            a.href = `/api/download/${data.jobId}`;
-            a.download = data.filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            try {
+                const resp = await fetch(`/api/download/${state.jobId}`);
+                if (!resp.ok) throw new Error('Download failed');
+                const blob = await resp.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = data.filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            } catch (err) {
+                alert('Download failed: ' + err.message);
+            }
         };
 
     } catch (err) {

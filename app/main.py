@@ -114,7 +114,7 @@ async def upload(
     no_grain: bool = Form(False),
     no_faststart: bool = Form(False),
     no_spoof: bool = Form(False),
-    no_inflate: bool = Form(False),
+    no_inflate: bool = Form(True),
 ):
     try:
         # Validate

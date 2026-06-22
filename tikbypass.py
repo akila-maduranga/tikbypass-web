@@ -39,7 +39,7 @@ class Config:
     grain: bool = True
     faststart: bool = True
     spoof_device: bool = True
-    inflate_stbl: bool = True           # 5x inflation by default
+    inflate_stbl: bool = False          # 5x inflation off by default (breaks playback)
     inflate_loops: int = 5
     device_model: str = "iPhone15,2"    # iPhone 14 Pro
     ios_version: str = "16.4"
@@ -109,19 +109,28 @@ def encode_video(cfg: Config, tmp_path: Path) -> bool:
         "-crf", str(cfg.crf),
         "-maxrate", cfg.maxrate,
         "-bufsize", cfg.bufsize,
-        "-bf", "2",                    # B-frames
-        "-refs", "3",                  # reference frames
-        "-g", str(cfg.fps * 2),        # GOP size = 2 seconds
+        "-bf", "2",
+        "-refs", "3",
+        "-g", str(cfg.fps * 2),
         "-keyint_min", str(cfg.fps),
-        "-sc_threshold", "0",          # disable scene-cut detection for consistent GOP
-        "-x264-params", "no-deblock=1:no-fast-pskip=1",  # preserve fine detail
+        "-sc_threshold", "0",
+        "-x264-params", "no-deblock=1:no-fast-pskip=1",
         "-vf", vf,
         "-c:a", "aac",
         "-b:a", cfg.audio_bitrate,
         "-ar", "48000",
         "-ac", "2",
-        str(tmp_path),
+        "-movflags", "+faststart",
     ]
+
+    # Device metadata injection via ffmpeg (reliable, no box manipulation)
+    if cfg.spoof_device:
+        cmd += [
+            "-metadata", f"model={cfg.device_model}",
+            "-metadata", f"make=Apple",
+        ]
+
+    cmd.append(str(tmp_path))
 
     cfg.log("[ENCODE] Running ffmpeg...")
     cfg.log(f"[ENCODE] CRF={cfg.crf}, preset={cfg.preset}, sharpen={cfg.sharpen}, grain={cfg.grain}")
@@ -343,7 +352,7 @@ def apply_faststart(data: bytes, cfg: Config) -> bytes:
     # Fix stco/co64 offsets
     new_mdat_off = ftyp_sz + moov_sz + len(rest)
     delta = new_mdat_off - mdat_off
-    adjust_offsets(new, delta, ftyp_sz, ftyp_sz + moov_sz)
+    adjust_offsets(new, delta, ftyp_sz + 8, ftyp_sz + moov_sz)
 
     return bytes(new)
 
@@ -552,7 +561,9 @@ def apply_stbl_inflation(data: bytes, cfg: Config) -> bytes:
     result.extend(data[moov_off + moov_sz:])
 
     delta = len(new_moov_data) - moov_sz
-    if delta != 0:
+    # Only adjust offsets if moov is embedded (data after it gets shifted).
+    # If moov is at end of file, its size change doesn't affect mdat positions.
+    if delta != 0 and moov_off + moov_sz < len(data):
         adjust_offsets(result, delta, moov_off + 8, moov_off + len(new_moov_data))
 
     return bytes(result)
@@ -580,7 +591,8 @@ def apply_metadata(data: bytes, cfg: Config) -> bytes:
     result.extend(data[moov_off + moov_sz:])
 
     delta = len(new_moov_data) - moov_sz
-    if delta != 0:
+    # Only adjust if moov is embedded — not at end of file
+    if delta != 0 and moov_off + moov_sz < len(data):
         adjust_offsets(result, delta, moov_off + 8, moov_off + len(new_moov_data))
 
     return bytes(result)
@@ -602,41 +614,28 @@ def process(cfg: Config) -> bool:
 
     tmp = cfg.output_path.with_suffix(".tikbypass.tmp.mp4")
 
-    # ── Stage 1: Encode ──
-    print("[1/4] Encoding with quality-preserving parameters...")
+    # ── Stage 1: Encode (includes metadata + faststart via ffmpeg) ──
+    print("[1/3] Encoding with quality-preserving parameters...")
+    if cfg.spoof_device:
+        print(f"  Device spoof → {cfg.device_model} / iOS {cfg.ios_version}")
     if not encode_video(cfg, tmp):
         tmp.unlink(missing_ok=True)
         return False
 
-    # ── Stage 2: Post-processing ──
-    with open(tmp, "rb") as f:
-        data = f.read()
+    # ── Stage 2: Optional post-processing ──
+    data = tmp.read_bytes()
 
-    print("[2/4] Post-processing MP4 structure...")
-
-    # Optional: sample-table inflation (aggressive)
     if cfg.inflate_stbl:
+        print("[2/4] Inflating sample tables...")
         data = apply_stbl_inflation(data, cfg)
 
-    # Device metadata injection
-    if cfg.spoof_device:
-        data = apply_metadata(data, cfg)
-        print(f"  ✓ Device spoofed → {cfg.device_model} / iOS {cfg.ios_version}")
-
-    # Faststart
-    if cfg.faststart:
-        data = apply_faststart(data, cfg)
-        print("  ✓ Faststart applied (moov → front)")
-
-    # Write final
+    # Write final output
     cfg.output_path.write_bytes(data)
     tmp.unlink(missing_ok=True)
 
-    # ── Stage 3: Report ──
+    # ── Report & validate ──
     size_mb = cfg.output_path.stat().st_size / (1024 * 1024)
     print(f"[3/4] Output: {cfg.output_path} ({size_mb:.1f} MB)")
-
-    # ── Stage 4: Quick validation ──
     print("[4/4] Validating output...")
     result = subprocess.run(
         ["ffprobe", "-v", "quiet", "-print_format", "json",

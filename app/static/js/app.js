@@ -142,6 +142,15 @@ dom.processBtn.addEventListener('click', async () => {
         dom.resultInfo.textContent = `${data.filename} — ${data.size_mb} MB`;
         dom.downloadLink.href = `/api/download/${data.jobId}`;
         dom.downloadLink.download = data.filename;
+        dom.downloadLink.onclick = (e) => {
+            e.preventDefault();
+            const a = document.createElement('a');
+            a.href = `/api/download/${data.jobId}`;
+            a.download = data.filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        };
 
     } catch (err) {
         dom.progressFill.style.width = '100%';

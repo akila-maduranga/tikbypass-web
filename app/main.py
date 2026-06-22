@@ -191,10 +191,12 @@ async def download(job_id: str):
     if not output_path.exists():
         return JSONResponse({"error": "File not found or expired"}, status_code=404)
 
+    filename = f"tikbypass_{job_id}.mp4"
     return FileResponse(
         output_path,
         media_type="video/mp4",
-        filename=f"tikbypass_{job_id}.mp4",
+        filename=filename,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 
 
